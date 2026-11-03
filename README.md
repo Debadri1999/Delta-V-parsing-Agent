@@ -46,7 +46,7 @@ Built for the Purdue Data Mine × AstraZeneca *Transforming DeltaV* project.
 | **Models** | `gpt-oss:120b` (cartographer + parser), `gemma4:26b-a4b` (critic), on Purdue GenAI Studio |
 | **Quality controls** | Deterministic guardrails, independent critic, up to 3 revision rounds per section, release gate |
 | **Accuracy** | Cell-level F1 **0.98** against a hand-written reference DDS; a second, unseen module released without code changes |
-| **Runtime** | About 6 minutes and about 55 LLM calls per module |
+| **Runtime** | About 7–8 minutes and about 50 LLM calls per module; every run writes a step-by-step timing trace |
 
 ---
 
@@ -137,7 +137,8 @@ Useful `run` options:
 |---|---|---|
 | `<module>_DDS.pdf` | Engineers, reviewers | The specification: cover with release status, table of contents, all DDS sections, Appendix A with QA scores and open findings |
 | `<module>_dds.json` | Developers, downstream tools | The same content as typed data, with source citations per row |
-| `<module>_qa.json` | Developers | Per-section scores, iterations, guardrail findings, the cartographer's plan, LLM usage (calls, tokens, time) |
+| `<module>_qa.json` | Developers | Per-section scores, iterations, guardrail findings, the cartographer's plan, LLM usage (calls, tokens, time), timing trace |
+| `<module>_timing.md` | Developers | Timing trace: wall-clock per phase, time per step and per section job, LLM time and rate-limit waits |
 | `<module>_eval.md` / `.json` | Developers | Only with `--truth`: per-section precision/recall/F1 and every difference |
 | `output/dds_agent.log` | Developers | Run log (agent names, token counts, timings; never FHX content) |
 
@@ -331,6 +332,26 @@ not only the score.
 run, and its content (commands, devices, monitors, alarms) matches the earlier prototype output.
 There is no hand-written spec for it yet, so it has no cell score.
 
+### Runtime profile
+
+Every run writes `<module>_timing.md` ([`tracing.py`](src/dds_agent/tracing.py)). A traced full
+run of the reference module (19 section jobs, 3 workers, RELEASED, no rate-limit waits):
+
+| Phase (sequential) | Wall-clock | Share |
+|---|---:|---:|
+| Load knowledge base + index the FHX | 0.9 s | 0.2% |
+| Cartographer plan (2 LLM calls) | 48.6 s | 10.6% |
+| Section jobs in parallel (parse → guard → critique → revise) | 6 min 49.6 s | 89.1% |
+| Cross-section guardrails, release gate, JSON + PDF | 0.7 s | 0.2% |
+| **Total** | **7 min 40 s** | |
+
+Inside the section jobs (summed across parallel jobs): the parser agent took 16 min 12 s over
+24 drafts (mean 40.5 s), the critic 1 min 1 s over 24 reviews (mean 2.6 s), and all deterministic
+code (source selection, guardrails, guardrail fetch) under 1 s. Generation by the parser model is
+the bottleneck, and the slowest section sets the total: Parameter Interface needed 3 rounds
+(6 min 44 s) while every other section had finished at 6 min 6 s. If it passes on its first
+round, a run takes about 5 minutes.
+
 ---
 
 ## Project structure
@@ -341,6 +362,7 @@ Delta-V-parsing-Agent/
 │   ├── cli.py                 # dds-agent command line
 │   ├── config.py              # settings + on-prem guard
 │   ├── orchestrator.py        # plan → per-section loop → release gate → artifacts
+│   ├── tracing.py             # timed spans per step → <module>_timing.md
 │   ├── logging_setup.py
 │   ├── fhx/
 │   │   ├── tree.py            # decode, tokenize, generic block tree

@@ -38,6 +38,7 @@ def _run(args: argparse.Namespace, settings: Settings) -> int:
         print(f"\n{'RELEASED' if result.document.released else 'DRAFT'}: {result.pdf_path}")
         print(f"  reason: {result.document.release_reason}")
         print(f"  json:   {result.json_path}\n  qa:     {result.qa_path}")
+        print(f"  timing: {result.timing_path} (total {orch.tracer.summary()['total_s']:.1f}s)")
         if args.truth:
             ev = run_evaluation(result.document, args.truth, result.pdf_path.parent)
             o = ev["overall"]

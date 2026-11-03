@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime
@@ -33,6 +34,7 @@ from dds_agent.knowledge.store import KnowledgeStore
 from dds_agent.llm.client import LLMClient
 from dds_agent.render.pdf import render_pdf
 from dds_agent.schema.dds import SECTION_BY_ID, SECTIONS, CommandSequence, DdsDocument, SectionQA, SectionSpec
+from dds_agent.tracing import Tracer, timing_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,7 @@ class RunResult:
     pdf_path: Path
     json_path: Path
     qa_path: Path
+    timing_path: Path
 
 
 class Orchestrator:
@@ -62,11 +65,14 @@ class Orchestrator:
                  workers: int = 4) -> None:
         self.settings = settings
         self.llm = llm or LLMClient(settings)
+        start = time.perf_counter()
         self.kb = kb or KnowledgeStore.load(settings.exemplar_dir)
+        self._kb_load_s = time.perf_counter() - start
         self.cartographer = Cartographer(self.llm, self.kb, settings)
         self.parser = ParserAgent(self.llm, self.kb, settings)
         self.critic = CriticAgent(self.llm, self.kb, settings)
         self.workers = workers
+        self.tracer = Tracer()
 
     # ------------------------------------------------------------------ public
 
@@ -78,8 +84,13 @@ class Orchestrator:
             out_dir: Output folder (default ``<output_dir>/<module>``).
             sections: Optional subset of section ids (for quick iterations).
         """
-        source = FhxSource.load(fhx_path)
-        plan = self.cartographer.plan(source)
+        self.tracer = tr = Tracer()
+        tr.record("knowledge_base_load", self._kb_load_s, start_s=0.0)
+        self._kb_load_s = 0.0  # only the first run of this orchestrator pays for it
+        with tr.span("fhx_index"):
+            source = FhxSource.load(fhx_path)
+        with tr.span("cartographer_plan"):
+            plan = self.cartographer.plan(source)
         ctx = GuardrailContext(source, plan.main_module, plan.command_set)
         module = plan.main_module
         wanted = [s for s in SECTIONS if sections is None or s.id in sections]
@@ -98,7 +109,7 @@ class Orchestrator:
             else:
                 jobs.append((spec.id, lambda s=spec: self._section_loop(s, plan, source, ctx)))
 
-        with ThreadPoolExecutor(max_workers=self.workers) as pool:
+        with tr.span("sections_parallel"), ThreadPoolExecutor(max_workers=self.workers) as pool:
             futures = {name: pool.submit(self._guarded, name, fn) for name, fn in jobs}
             results = {name: f.result() for name, f in futures.items()}
 
@@ -110,13 +121,15 @@ class Orchestrator:
             doc.qa.append(res.qa)
         doc.commands.sort(key=lambda c: c.block)
 
-        cross = check_document(doc.sections, ctx)
+        with tr.span("cross_section_guardrails"):
+            cross = check_document(doc.sections, ctx)
         if cross.errors or cross.warnings:
             doc.qa.append(SectionQA(section_id="document", score=10.0 if cross.ok else GUARDRAIL_SCORE_CAP,
                                     passed=cross.ok, guardrail_errors=cross.errors, guardrail_warnings=cross.warnings))
         for w in plan.warnings:
             logger.info("plan warning recorded: %s", w)
-        doc.released, doc.release_reason = self._release_gate(doc)
+        with tr.span("release_gate"):
+            doc.released, doc.release_reason = self._release_gate(doc)
         return self._write(doc, plan, out_dir or self.settings.output_dir / _slug(module))
 
     # ------------------------------------------------------------------- loops
@@ -163,21 +176,23 @@ class Orchestrator:
                             text="\n\n".join(f"### SOURCE [{c.id}]\n{c.text}" for c in nodes))
 
     def _section_loop(self, spec: SectionSpec, plan: Plan, source: FhxSource, ctx: GuardrailContext) -> LoopResult:
-        bundle, notes = self._bundle(spec, plan, source)
+        with self.tracer.span("source_selection", spec.id):
+            bundle, notes = self._bundle(spec, plan, source)
         retrieve = lambda qs: self._retrieve(source, qs, set(bundle.refs), None)  # noqa: E731
         return self._loop(spec, spec.id, plan.main_module, bundle, notes, retrieve, source,
                           lambda out, src, invalid: check_section(spec, out, src, ctx, invalid))
 
     def _command_loop(self, spec: SectionSpec, block: str, definition: str, plan: Plan, source: FhxSource,
                       ctx: GuardrailContext) -> LoopResult:
-        nodes = source.select(Selector(scope=plan.main_module, keyword="FUNCTION_BLOCK", name_regex=re.escape(block),
-                                       follow_references=True))
-        if plan.command_set:
-            nodes += source.select(Selector(scope=plan.command_set, scope_is_target=True, keyword="ENTRY"))
-        bundle = SourceBundle.from_nodes(nodes)
+        label = f"command_sequences:{block}"
+        with self.tracer.span("source_selection", label):
+            nodes = source.select(Selector(scope=plan.main_module, keyword="FUNCTION_BLOCK",
+                                           name_regex=re.escape(block), follow_references=True))
+            if plan.command_set:
+                nodes += source.select(Selector(scope=plan.command_set, scope_is_target=True, keyword="ENTRY"))
+            bundle = SourceBundle.from_nodes(nodes)
         notes = (f"Document command block {block} (definition {definition}). The command name comes from named set "
                  f"{plan.command_set or '(see source)'}.")
-        label = f"command_sequences:{block}"
         retrieve = lambda qs: self._retrieve(source, qs, set(bundle.refs), None)  # noqa: E731
         return self._loop(spec, label, plan.main_module, bundle, notes, retrieve, source,
                           lambda out, src, invalid: check_command(spec, out, src, ctx, block, definition, invalid))
@@ -187,11 +202,14 @@ class Orchestrator:
         best: tuple[tuple[bool, float], dict, SectionQA] | None = None
         feedback, previous = "", None
         for it in range(1, self.settings.max_iterations + 1):
-            res = self.parser.extract(spec, module, bundle, notes=notes, feedback=feedback, previous=previous,
-                                      retrieve=retrieve, label=label)
+            with self.tracer.span("parser", label, it):
+                res = self.parser.extract(spec, module, bundle, notes=notes, feedback=feedback, previous=previous,
+                                          retrieve=retrieve, label=label)
             src = res.source or bundle
-            rep = guard(res.output, src, res.invalid_rows)
-            review = self.critic.review(spec, module, res.output, src, rep, label=label)
+            with self.tracer.span("guardrails", label, it):
+                rep = guard(res.output, src, res.invalid_rows)
+            with self.tracer.span("critic", label, it):
+                review = self.critic.review(spec, module, res.output, src, rep, label=label)
             score = review.score if rep.ok else min(review.score, GUARDRAIL_SCORE_CAP)
             passed = rep.ok and not review.failed and score >= self.settings.pass_score
             qa = SectionQA(section_id=label, score=score, iterations=it, passed=passed,
@@ -206,7 +224,8 @@ class Orchestrator:
                 break
             feedback = _feedback(rep, review)
             previous = res.output
-            bundle = _augment(src, rep, source, label)
+            with self.tracer.span("guardrail_fetch", label, it):
+                bundle = _augment(src, rep, source, label)
         assert best is not None
         best[2].iterations = it
         return LoopResult(best[1], best[2])
@@ -239,14 +258,20 @@ class Orchestrator:
         json_path = out_dir / f"{stem}_dds.json"
         qa_path = out_dir / f"{stem}_qa.json"
         pdf_path = out_dir / f"{stem}_DDS.pdf"
-        json_path.write_text(doc.model_dump_json(indent=2), encoding="utf-8")
+        timing_path = out_dir / f"{stem}_timing.md"
+        with self.tracer.span("write_outputs"):
+            json_path.write_text(doc.model_dump_json(indent=2), encoding="utf-8")
+        with self.tracer.span("render_pdf"):
+            render_pdf(doc, pdf_path)
+        timing = self.tracer.summary(self.llm.ledger.calls)
         qa_path.write_text(json.dumps({
             "module": doc.module, "released": doc.released, "release_reason": doc.release_reason,
             "sections": [q.model_dump() for q in doc.qa], "plan": plan.model_dump(),
-            "llm_usage": self.llm.ledger.summary()}, indent=2), encoding="utf-8")
-        render_pdf(doc, pdf_path)
-        logger.info("%s: %s -> %s", doc.module, "RELEASED" if doc.released else "DRAFT", pdf_path)
-        return RunResult(doc, pdf_path, json_path, qa_path)
+            "llm_usage": self.llm.ledger.summary(), "timing": timing}, indent=2), encoding="utf-8")
+        timing_path.write_text(timing_markdown(doc.module, timing, self.workers), encoding="utf-8")
+        logger.info("%s: %s -> %s (%.1fs)", doc.module, "RELEASED" if doc.released else "DRAFT", pdf_path,
+                    timing["total_s"])
+        return RunResult(doc, pdf_path, json_path, qa_path, timing_path)
 
 
 def _augment(bundle: SourceBundle, rep: GuardrailReport, source: FhxSource, label: str) -> SourceBundle:

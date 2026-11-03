@@ -74,6 +74,7 @@ class CallRecord:
     completion_tokens: int
     seconds: float
     ok: bool
+    wait_s: float = 0.0
 
 
 @dataclass
@@ -145,6 +146,7 @@ class LLMClient:
     def _complete(self, agent: str, model: str, messages: list[dict[str, str]], max_tokens: int) -> str:
         use_json = self._json_mode.get(model, True)
         backoff = list(self.settings.rate_limit_backoff_s)
+        waited = 0.0
         while True:
             start = time.perf_counter()
             kwargs: dict[str, Any] = {"model": model, "messages": messages, "temperature": self.settings.temperature,
@@ -161,6 +163,7 @@ class LLMClient:
                     wait = backoff.pop(0)
                     logger.warning("%s: rate limited by %s, retrying in %.0fs", agent, model, wait)
                     time.sleep(wait)
+                    waited += wait
                     continue
                 if use_json and "response_format" in str(exc).lower():
                     logger.info("%s does not support JSON mode; using prompt-only JSON", model)
@@ -175,12 +178,14 @@ class LLMClient:
                 wait = backoff.pop(0)
                 logger.warning("%s: %s from %s, retrying in %.0fs", agent, type(exc).__name__, model, wait)
                 time.sleep(wait)
+                waited += wait
                 continue
             elapsed = time.perf_counter() - start
             content = resp.choices[0].message.content or ""
             usage = resp.usage
             self.ledger.calls.append(CallRecord(agent, model, getattr(usage, "prompt_tokens", 0) or 0,
-                                                getattr(usage, "completion_tokens", 0) or 0, elapsed, bool(content)))
+                                                getattr(usage, "completion_tokens", 0) or 0, elapsed, bool(content),
+                                                waited))
             logger.info("%s -> %s: %d prompt / %d completion tokens in %.1fs", agent, model,
                         getattr(usage, "prompt_tokens", 0) or 0, getattr(usage, "completion_tokens", 0) or 0, elapsed)
             if not content and resp.choices[0].finish_reason == "length":

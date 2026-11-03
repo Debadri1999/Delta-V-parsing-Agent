@@ -7,6 +7,8 @@ import threading
 from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
 from dds_agent.config import Settings
 from dds_agent.knowledge.store import KnowledgeStore
 from dds_agent.llm.client import UsageLedger
@@ -90,3 +92,15 @@ def test_gate_blocks_release_when_guardrails_fail(tmp_path):
     result = orch.run(FIXTURE, out_dir=tmp_path, sections=["alarms"])  # scripted reply omits FAIL_ALM
     assert not result.document.released
     assert "guardrail errors in alarms" in result.document.release_reason
+
+
+def test_run_writes_timing_trace(tmp_path):
+    orch, _ = _orchestrator(tmp_path)
+    result = orch.run(FIXTURE, out_dir=tmp_path, sections=["control_module_interface", "command_sequences"])
+    timing = json.loads(result.qa_path.read_text(encoding="utf-8"))["timing"]
+    assert set(timing["jobs"]) == {"control_module_interface", "command_sequences:COMMAND_00000"}
+    assert timing["jobs"]["control_module_interface"]["iterations"] == 2
+    assert {"parser", "guardrails", "critic", "source_selection"} <= set(timing["steps"])
+    assert timing["total_s"] == pytest.approx(sum(timing["phases"].values()), abs=1e-2)
+    report = result.timing_path.read_text(encoding="utf-8")
+    assert "Total wall-clock" in report and "sections_parallel" in report
