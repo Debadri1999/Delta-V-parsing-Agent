@@ -1,0 +1,23 @@
+# Secrets
+.env
+
+# NDA-protected AstraZeneca data and anything derived from it
+*.fhx
+*.docx
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
+data/*
+!data/README.md
+03 Transmittal/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.venv/
+build/
+dist/

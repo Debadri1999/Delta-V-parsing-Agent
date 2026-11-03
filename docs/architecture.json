@@ -1,0 +1,331 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "DDS Agent: DeltaV FHX to Detailed Design Specification",
+    "locale": "en",
+    "output": "architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1300,
+      660
+    ],
+    "views": [
+      {
+        "id": "main-path",
+        "label": "End-to-end path",
+        "focus": [
+          "fhx",
+          "index",
+          "carto",
+          "parser",
+          "guard",
+          "critic",
+          "gate",
+          "pdf"
+        ],
+        "note": "One FHX export in, one reviewed DDS PDF out."
+      },
+      {
+        "id": "agent-loop",
+        "label": "Self-correcting loop",
+        "focus": [
+          "parser",
+          "guard",
+          "critic"
+        ],
+        "note": "Each section is drafted, verified by code, reviewed by a second model and revised up to three times."
+      },
+      {
+        "id": "knowledge",
+        "label": "Retrieval (RAG)",
+        "focus": [
+          "kb",
+          "carto",
+          "parser",
+          "index"
+        ],
+        "note": "Agents read section rules, PCSD conventions and exemplar specs, plus the FHX blocks they planned to read."
+      },
+      {
+        "id": "quality",
+        "label": "Quality and evaluation",
+        "focus": [
+          "guard",
+          "critic",
+          "gate",
+          "pdf",
+          "eval"
+        ],
+        "note": "Nothing is released unless guardrails pass and review scores clear the thresholds."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "fhx",
+      "type": "external",
+      "label": "FHX export",
+      "sublabel": "DeltaV EM class",
+      "pos": [
+        30,
+        330
+      ],
+      "size": [
+        120,
+        76
+      ]
+    },
+    {
+      "id": "index",
+      "type": "backend",
+      "label": "Source index",
+      "sublabel": "syntax-only reader",
+      "pos": [
+        190,
+        330
+      ],
+      "size": [
+        120,
+        76
+      ]
+    },
+    {
+      "id": "carto",
+      "type": "backend",
+      "label": "Cartographer",
+      "sublabel": "plans sources",
+      "tag": "gpt-oss:120b",
+      "pos": [
+        350,
+        330
+      ],
+      "size": [
+        120,
+        76
+      ]
+    },
+    {
+      "id": "parser",
+      "type": "backend",
+      "label": "Parser agent",
+      "sublabel": "drafts each section",
+      "tag": "gpt-oss:120b",
+      "pos": [
+        510,
+        330
+      ],
+      "size": [
+        120,
+        76
+      ]
+    },
+    {
+      "id": "guard",
+      "type": "security",
+      "label": "Guardrails",
+      "sublabel": "code verification",
+      "pos": [
+        670,
+        330
+      ],
+      "size": [
+        120,
+        76
+      ]
+    },
+    {
+      "id": "critic",
+      "type": "backend",
+      "label": "Critic agent",
+      "sublabel": "scores 0-10",
+      "tag": "gemma4:26b",
+      "pos": [
+        830,
+        330
+      ],
+      "size": [
+        120,
+        76
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "Release gate",
+      "sublabel": "RELEASED / DRAFT",
+      "pos": [
+        990,
+        330
+      ],
+      "size": [
+        120,
+        76
+      ]
+    },
+    {
+      "id": "pdf",
+      "type": "frontend",
+      "label": "DDS PDF",
+      "sublabel": "+ JSON + QA report",
+      "pos": [
+        1150,
+        330
+      ],
+      "size": [
+        120,
+        76
+      ]
+    },
+    {
+      "id": "kb",
+      "type": "database",
+      "label": "Knowledge base",
+      "sublabel": "rules + exemplar DDS",
+      "pos": [
+        400,
+        110
+      ],
+      "size": [
+        180,
+        76
+      ]
+    },
+    {
+      "id": "eval",
+      "type": "external",
+      "label": "Eval harness",
+      "sublabel": "vs human DDS",
+      "pos": [
+        1150,
+        540
+      ],
+      "size": [
+        120,
+        76
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "fhx-to-index",
+      "from": "fhx",
+      "to": "index",
+      "variant": "emphasis"
+    },
+    {
+      "id": "index-to-carto",
+      "from": "index",
+      "to": "carto",
+      "variant": "emphasis"
+    },
+    {
+      "id": "carto-to-parser",
+      "from": "carto",
+      "to": "parser",
+      "variant": "emphasis"
+    },
+    {
+      "id": "parser-to-guard",
+      "from": "parser",
+      "to": "guard",
+      "variant": "emphasis"
+    },
+    {
+      "id": "guard-to-critic",
+      "from": "guard",
+      "to": "critic",
+      "variant": "emphasis"
+    },
+    {
+      "id": "critic-to-gate",
+      "from": "critic",
+      "to": "gate",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gate-to-pdf",
+      "from": "gate",
+      "to": "pdf",
+      "variant": "emphasis"
+    },
+    {
+      "id": "kb-to-carto",
+      "from": "kb",
+      "to": "carto",
+      "label": "section rules",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "kb-to-parser",
+      "from": "kb",
+      "to": "parser",
+      "label": "rules + exemplars",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDx": 8
+    },
+    {
+      "id": "guard-fetch",
+      "from": "guard",
+      "to": "parser",
+      "label": "errors + missing blocks",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "id": "critic-revise",
+      "from": "critic",
+      "to": "parser",
+      "label": "issues to fix",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "labelDx": 90
+    },
+    {
+      "id": "pdf-to-eval",
+      "from": "pdf",
+      "to": "eval",
+      "label": "score",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        1210,
+        473
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "LLM does the interpretation",
+      "items": [
+        "Cartographer plans which FHX blocks each section reads",
+        "Parser drafts typed rows with source citations",
+        "Critic (a second model) reviews; up to 3 revision rounds"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Code verifies, never writes",
+      "items": [
+        "Values must exist in the export (grounding)",
+        "Every device, alarm, step and transition covered",
+        "Proven gaps fetch the missing blocks for the next round"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Safe by design",
+      "items": [
+        "LLM calls go only to Purdue GenAI Studio",
+        "Retrieval and indexing run locally",
+        "Failing sections ship as DRAFT with findings"
+      ]
+    }
+  ]
+}
