@@ -52,11 +52,11 @@ Built for the Purdue Data Mine × AstraZeneca *Transforming DeltaV* project.
 
 ## Architecture
 
-![DDS Agent architecture](docs/architecture.png)
+![DDS Agent architecture](docs/architecture.svg)
 
-Open [`docs/architecture.html`](docs/architecture.html) in a browser for the interactive version
-(guided views, zoom, search, light/dark, export). The diagram source is
-[`docs/architecture.json`](docs/architecture.json).
+The diagram is a plain SVG ([`docs/architecture.svg`](docs/architecture.svg)), so it scales to any
+screen and can be edited directly. [`docs/architecture.png`](docs/architecture.png) is a
+high-resolution copy for slides.
 
 **In one sentence:** the LLM agents do all the interpretation, code only verifies their work, and
 a release gate decides whether the document is fit to hand to an engineer.
@@ -362,7 +362,7 @@ Delta-V-parsing-Agent/
 │   └── render/pdf.py          # fpdf2 renderer (pure Python, no native libraries)
 ├── tests/                     # offline tests: syntax layer, guardrails, metrics, agent loop
 │   └── fixtures/mini_em.fhx.txt   # synthetic FHX (no confidential data)
-├── docs/                      # architecture diagram (PNG, interactive HTML, JSON source)
+├── docs/                      # architecture diagram (SVG source + PNG for slides)
 ├── data/exemplars/            # hand-written DDS .docx files (git-ignored)
 ├── input/                     # FHX exports to process (git-ignored)
 ├── output/                    # generated runs (git-ignored)
@@ -404,7 +404,7 @@ section is wrong.
 | Catch a new class of error | Add a check in [`guardrails/checks.py`](src/dds_agent/guardrails/checks.py); return `fetch` selectors when the fix needs more source; add a test |
 | Add a section or column | `SECTIONS` in [`schema/dds.py`](src/dds_agent/schema/dds.py) → rule in the KB → layout in [`render/pdf.py`](src/dds_agent/render/pdf.py) → reader in [`dds_docx.py`](src/dds_agent/knowledge/dds_docx.py) if you evaluate it |
 | Change prompts | [`agents/prompts.py`](src/dds_agent/agents/prompts.py) (re-run an evaluation afterwards) |
-| Update the architecture diagram | Edit [`docs/architecture.json`](docs/architecture.json) and re-render it with [Archify](https://github.com/tt-a1i/archify) |
+| Update the architecture diagram | Edit [`docs/architecture.svg`](docs/architecture.svg), then re-export `architecture.png` from a browser |
 
 Design rule: **guardrails verify, they never generate content.** If you find yourself writing
 code that produces DDS values, put the knowledge in the KB instead and let a guardrail check

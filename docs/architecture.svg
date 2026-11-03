@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1640 1010" width="1640" height="1010" font-family="'Segoe UI', -apple-system, 'Helvetica Neue', Arial, sans-serif" role="img" aria-labelledby="t">
+<title id="t">DDS Agent architecture: DeltaV FHX export to Detailed Design Specification PDF</title>
+<defs><marker id="arrow-io" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8b949e"/></marker><marker id="arrow-agent" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3fb950"/></marker><marker id="arrow-guard" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ff7b72"/></marker><marker id="arrow-out" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#39c5cf"/></marker><marker id="arrow-kb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#bc8cff"/></marker><marker id="arrow-flow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#c9d1d9"/></marker><marker id="arrow-fix" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e3b341"/></marker><marker id="arrow-rev" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f778ba"/></marker></defs>
+<rect width="1640" height="1010" rx="18" fill="#0d1117"/>
+<text x="80" y="62" font-size="36" font-weight="800" fill="#f0f6fc">DDS Agent</text>
+<text x="80" y="100" font-size="21" font-weight="500" fill="#9da7b3">DeltaV FHX export → reviewed Detailed Design Specification (PDF)</text>
+<line x1="80" y1="140" x2="130" y2="140" stroke="#c9d1d9" stroke-width="3.5"/>
+<text x="142" y="146" font-size="17" font-weight="600" fill="#9da7b3">main flow</text>
+<line x1="260" y1="140" x2="310" y2="140" stroke="#e3b341" stroke-width="3.5" stroke-dasharray="10 7"/>
+<text x="322" y="146" font-size="17" font-weight="600" fill="#9da7b3">revision feedback (max 3 rounds per section)</text>
+<path d="M380 365.0 H464" fill="none" stroke="#c9d1d9" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-flow)"/>
+<path d="M770 365.0 H854" fill="none" stroke="#c9d1d9" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-flow)"/>
+<path d="M1160 365.0 H1244" fill="none" stroke="#c9d1d9" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-flow)"/>
+<path d="M1250 665.0 H1166" fill="none" stroke="#c9d1d9" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-flow)"/>
+<path d="M860 665.0 H776" fill="none" stroke="#c9d1d9" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-flow)"/>
+<path d="M470 665.0 H386" fill="none" stroke="#c9d1d9" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-flow)"/>
+<path d="M1360 430 V594" fill="none" stroke="#c9d1d9" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-flow)"/>
+<path d="M1460 600 V436" fill="none" stroke="#e3b341" stroke-width="3.5" stroke-dasharray="10 7" stroke-linejoin="round" marker-end="url(#arrow-fix)"/>
+<text x="1474" y="502" font-size="18" font-weight="700" fill="#e3b341" text-anchor="start" paint-order="stroke" stroke="#0d1117" stroke-width="6">errors +</text>
+<text x="1474" y="525" font-size="18" font-weight="700" fill="#e3b341" text-anchor="start" paint-order="stroke" stroke="#0d1117" stroke-width="6">missing blocks</text>
+<path d="M1090 600 V515 H1290 V436" fill="none" stroke="#f778ba" stroke-width="3.5" stroke-dasharray="10 7" stroke-linejoin="round" marker-end="url(#arrow-rev)"/>
+<text x="1190" y="502" font-size="18" font-weight="700" fill="#f778ba" text-anchor="middle" paint-order="stroke" stroke="#0d1117" stroke-width="6">issues to fix</text>
+<path d="M1095 230 V262 H1010 V294" fill="none" stroke="#bc8cff" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-kb)"/>
+<path d="M1315 230 V262 H1400 V294" fill="none" stroke="#bc8cff" stroke-width="3.5" stroke-linejoin="round" marker-end="url(#arrow-kb)"/>
+<text x="1000" y="292" font-size="18" font-weight="700" fill="#bc8cff" text-anchor="end" paint-order="stroke" stroke="#0d1117" stroke-width="6">section rules</text>
+<text x="1410" y="292" font-size="18" font-weight="700" fill="#bc8cff" text-anchor="start" paint-order="stroke" stroke="#0d1117" stroke-width="6">rules + exemplars</text>
+<path d="M230 730 V824" fill="none" stroke="#8b949e" stroke-width="3.5" stroke-dasharray="10 7" stroke-linejoin="round" marker-end="url(#arrow-io)"/>
+<text x="244" y="788" font-size="18" font-weight="700" fill="#8b949e" text-anchor="start" paint-order="stroke" stroke="#0d1117" stroke-width="6">scored against</text>
+<rect x="80" y="300" width="300" height="130" rx="14" fill="#161b22" stroke="#8b949e" stroke-width="3"/>
+<circle cx="106" cy="332" r="15" fill="#8b949e"/>
+<text x="106" y="338" font-size="16" font-weight="800" fill="#0d1117" text-anchor="middle">1</text>
+<text x="230.0" y="362" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">FHX export</text>
+<text x="230.0" y="394" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">DeltaV EM class</text>
+<rect x="470" y="300" width="300" height="130" rx="14" fill="#161b22" stroke="#3fb950" stroke-width="3"/>
+<circle cx="496" cy="332" r="15" fill="#3fb950"/>
+<text x="496" y="338" font-size="16" font-weight="800" fill="#0d1117" text-anchor="middle">2</text>
+<text x="620.0" y="362" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">Source index</text>
+<text x="620.0" y="394" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">syntax-only reader</text>
+<rect x="860" y="300" width="300" height="130" rx="14" fill="#161b22" stroke="#3fb950" stroke-width="3"/>
+<circle cx="886" cy="332" r="15" fill="#3fb950"/>
+<text x="886" y="338" font-size="16" font-weight="800" fill="#0d1117" text-anchor="middle">3</text>
+<text x="1010.0" y="352" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">Cartographer</text>
+<text x="1010.0" y="380" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">plans what to read</text>
+<rect x="940.4" y="394" width="139.2" height="26" rx="13" fill="#3fb950" fill-opacity="0.16" stroke="#3fb950" stroke-width="1.5"/>
+<text x="1010.0" y="412" font-family="'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace" font-size="15" font-weight="700" fill="#3fb950" text-anchor="middle">gpt-oss:120b</text>
+<rect x="1250" y="300" width="300" height="130" rx="14" fill="#161b22" stroke="#3fb950" stroke-width="3"/>
+<circle cx="1276" cy="332" r="15" fill="#3fb950"/>
+<text x="1276" y="338" font-size="16" font-weight="800" fill="#0d1117" text-anchor="middle">4</text>
+<text x="1400.0" y="352" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">Parser agent</text>
+<text x="1400.0" y="380" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">drafts each section</text>
+<rect x="1330.4" y="394" width="139.2" height="26" rx="13" fill="#3fb950" fill-opacity="0.16" stroke="#3fb950" stroke-width="1.5"/>
+<text x="1400.0" y="412" font-family="'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace" font-size="15" font-weight="700" fill="#3fb950" text-anchor="middle">gpt-oss:120b</text>
+<rect x="1250" y="600" width="300" height="130" rx="14" fill="#161b22" stroke="#ff7b72" stroke-width="3"/>
+<circle cx="1276" cy="632" r="15" fill="#ff7b72"/>
+<text x="1276" y="638" font-size="16" font-weight="800" fill="#0d1117" text-anchor="middle">5</text>
+<text x="1400.0" y="662" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">Guardrails</text>
+<text x="1400.0" y="694" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">code verification</text>
+<rect x="860" y="600" width="300" height="130" rx="14" fill="#161b22" stroke="#3fb950" stroke-width="3"/>
+<circle cx="886" cy="632" r="15" fill="#3fb950"/>
+<text x="886" y="638" font-size="16" font-weight="800" fill="#0d1117" text-anchor="middle">6</text>
+<text x="1010.0" y="652" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">Critic agent</text>
+<text x="1010.0" y="680" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">scores 0-10, lists issues</text>
+<rect x="950.0" y="694" width="120.0" height="26" rx="13" fill="#3fb950" fill-opacity="0.16" stroke="#3fb950" stroke-width="1.5"/>
+<text x="1010.0" y="712" font-family="'Cascadia Code', Consolas, 'SF Mono', Menlo, monospace" font-size="15" font-weight="700" fill="#3fb950" text-anchor="middle">gemma4:26b</text>
+<rect x="470" y="600" width="300" height="130" rx="14" fill="#161b22" stroke="#ff7b72" stroke-width="3"/>
+<circle cx="496" cy="632" r="15" fill="#ff7b72"/>
+<text x="496" y="638" font-size="16" font-weight="800" fill="#0d1117" text-anchor="middle">7</text>
+<text x="620.0" y="662" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">Release gate</text>
+<text x="620.0" y="694" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">RELEASED or DRAFT</text>
+<rect x="80" y="600" width="300" height="130" rx="14" fill="#161b22" stroke="#39c5cf" stroke-width="3"/>
+<circle cx="106" cy="632" r="15" fill="#39c5cf"/>
+<text x="106" y="638" font-size="16" font-weight="800" fill="#0d1117" text-anchor="middle">8</text>
+<text x="230.0" y="662" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">DDS PDF</text>
+<text x="230.0" y="694" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">+ JSON + QA report</text>
+<rect x="1025" y="120" width="360" height="110" rx="14" fill="#161b22" stroke="#bc8cff" stroke-width="3"/>
+<text x="1205.0" y="182" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">Knowledge base</text>
+<text x="1205.0" y="214" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">rules + exemplar DDS (RAG)</text>
+<rect x="80" y="830" width="300" height="130" rx="14" fill="#161b22" stroke="#8b949e" stroke-width="3"/>
+<text x="230.0" y="892" font-size="27" font-weight="700" fill="#f0f6fc" text-anchor="middle">Eval harness</text>
+<text x="230.0" y="924" font-size="18" font-weight="500" fill="#9da7b3" text-anchor="middle">cell F1 vs human DDS</text>
+<rect x="470.0" y="820" width="346.6666666666667" height="160" rx="14" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+<circle cx="496.0" cy="853" r="7" fill="#39c5cf"/>
+<text x="514.0" y="860" font-size="21" font-weight="700" fill="#f0f6fc">LLM does the interpretation</text>
+<text x="494.0" y="898" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#39c5cf" font-weight="800">•</tspan>  Cartographer plans the sources</text>
+<text x="494.0" y="928" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#39c5cf" font-weight="800">•</tspan>  Parser drafts cited, typed rows</text>
+<text x="494.0" y="958" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#39c5cf" font-weight="800">•</tspan>  Critic is a second model family</text>
+<rect x="836.6666666666667" y="820" width="346.6666666666667" height="160" rx="14" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+<circle cx="862.6666666666667" cy="853" r="7" fill="#ff7b72"/>
+<text x="880.6666666666667" y="860" font-size="21" font-weight="700" fill="#f0f6fc">Code verifies, never writes</text>
+<text x="860.6666666666667" y="898" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#ff7b72" font-weight="800">•</tspan>  Every value grounded in the FHX</text>
+<text x="860.6666666666667" y="928" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#ff7b72" font-weight="800">•</tspan>  Every device, alarm, step covered</text>
+<text x="860.6666666666667" y="958" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#ff7b72" font-weight="800">•</tspan>  Gaps fetch the missing blocks</text>
+<rect x="1203.3333333333335" y="820" width="346.6666666666667" height="160" rx="14" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+<circle cx="1229.3333333333335" cy="853" r="7" fill="#3fb950"/>
+<text x="1247.3333333333335" y="860" font-size="21" font-weight="700" fill="#f0f6fc">Safe by design</text>
+<text x="1227.3333333333335" y="898" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#3fb950" font-weight="800">•</tspan>  LLM calls only to Purdue GenAI</text>
+<text x="1227.3333333333335" y="928" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#3fb950" font-weight="800">•</tspan>  Retrieval and indexing run locally</text>
+<text x="1227.3333333333335" y="958" font-size="17" font-weight="500" fill="#9da7b3"><tspan fill="#3fb950" font-weight="800">•</tspan>  Failing sections ship as DRAFT</text>
+</svg>
